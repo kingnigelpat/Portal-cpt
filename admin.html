@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Power Base | Portal CPT</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        :root {
+            --accent-admin: #10b981;
+            --admin-bg-solid: #020617;
+            --admin-card-solid: #1e293b;
+            --admin-border-solid: #334155;
+            --text-dim: #94a3b8;
+        }
+
+        body {
+            background: var(--admin-bg-solid);
+            margin: 0;
+            overflow: hidden;
+        }
+
+        .admin-layout {
+            display: grid;
+            grid-template-columns: 280px 1fr;
+            min-height: 100vh;
+            background: var(--admin-bg-solid);
+            visibility: hidden;
+        }
+
+        .sidebar {
+            background: #0f172a;
+            border-right: 1px solid rgba(255, 255, 255, 0.05);
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .admin-main {
+            padding: 3rem;
+            overflow-y: auto;
+        }
+
+        .nav-item {
+            padding: 1rem;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: var(--transition);
+            color: var(--text-dim);
+            font-weight: 500;
+        }
+
+        .nav-item:hover,
+        .nav-item.active {
+            background: var(--accent-admin);
+            color: #ffffff;
+        }
+
+        .admin-section {
+            display: none;
+            animation: fadeIn 0.4s ease-out;
+        }
+
+        .admin-section.active {
+            display: block;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1.5rem;
+            margin-bottom: 3rem;
+        }
+
+        .stat-card {
+            background: var(--admin-card-solid);
+            border: 2px solid var(--admin-border-solid);
+            padding: 1.5rem;
+            border-radius: 20px;
+        }
+
+        .stat-card h4 {
+            color: var(--text-dim);
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-card .value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #ffffff;
+        }
+
+        .form-container {
+            max-width: 800px;
+            background: var(--admin-card-solid);
+            border: 2px solid var(--admin-border-solid);
+            padding: 2.5rem;
+            border-radius: 24px;
+        }
+
+        textarea,
+        select,
+        input {
+            width: 100%;
+            background: #0f172a;
+            border: 1px solid var(--admin-border-solid);
+            border-radius: 12px;
+            padding: 1rem;
+            color: white;
+            font-size: 1rem;
+            margin-bottom: 1.5rem;
+            outline: none;
+        }
+
+        textarea {
+            min-height: 120px;
+        }
+
+        /* Login Gate Styles */
+        #admin-login-gate {
+            position: fixed;
+            inset: 0;
+            background: #0c0e14;
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .login-box {
+            background: #0f172a;
+            padding: 3rem;
+            border-radius: 24px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 1);
+            border: 2px solid var(--admin-border-solid);
+            text-align: center;
+            width: 90%;
+            max-width: 400px;
+        }
+
+        /* Mobile Responsive Admin */
+        @media (max-width: 900px) {
+            .admin-layout {
+                grid-template-columns: 1fr;
+            }
+
+            .sidebar {
+                padding: 1rem;
+                flex-direction: row;
+                overflow-x: auto;
+                position: sticky;
+                top: 0;
+                z-index: 100;
+                border-bottom: 1px solid var(--admin-border-solid);
+            }
+
+            .logo {
+                display: none;
+            }
+
+            .nav-item {
+                white-space: nowrap;
+                padding: 0.75rem 1rem;
+                font-size: 0.9rem;
+            }
+
+            .admin-main {
+                padding: 1.5rem;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Toast Notifications */
+        .toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .toast {
+            background: rgba(17, 24, 39, 0.95);
+            backdrop-filter: blur(10px);
+            color: white;
+            padding: 1rem 1.5rem;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            min-width: 300px;
+            animation: toastIn 0.3s ease-out forwards;
+            font-size: 0.9rem;
+        }
+
+        .toast.success {
+            border-left: 4px solid #10b981;
+        }
+
+        .toast.error {
+            border-left: 4px solid #ef4444;
+        }
+
+        @keyframes toastIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes toastOut {
+            from {
+                transform: translateX(0);
+                opacity: 1;
+            }
+
+            to {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="toast-container" id="toast-container"></div>
+    <!-- Admin Login Gate -->
+    <div id="admin-login-gate">
+        <div class="login-box">
+            <div class="logo" style="margin-bottom: 2rem;">ADMIN ACCESS</div>
+            <p style="color: var(--text-dim); margin-bottom: 2rem;">Please enter the security password to access the
+                Power Base.</p>
+            <div class="input-group">
+                <input type="password" id="adminPassword" placeholder=""
+                    style="text-align: center; letter-spacing: 4px; font-weight: bold;"
+                    onkeypress="if(event.key === 'Enter') verifyAdmin()">
+            </div>
+            <button class="btn-primary" style="background: var(--accent-admin);" onclick="verifyAdmin()">ACCESS
+                SYSTEM</button>
+            <p id="login-error" style="color: #ef4444; margin-top: 1rem; display: none;">Access Denied. Incorrect
+                Password.</p>
+        </div>
+    </div>
+
+    <div class="admin-layout" id="main-admin-layout">
+        <aside class="sidebar">
+            <div class="logo" style="margin-bottom: 3rem;">POWER BASE</div>
+            <div class="nav-item active" onclick="showSection(this, 'overview')">Overview</div>
+            <div class="nav-item" onclick="showSection(this, 'post-news')">Post News</div>
+            <div class="nav-item" onclick="showSection(this, 'manage-posts')">Manage Posts</div>
+            <div class="nav-item" onclick="showSection(this, 'post-results')">Post Results</div>
+            <div class="nav-item" onclick="showSection(this, 'reg-students')">Manage Students</div>
+            <div class="nav-item" onclick="showSection(this, 'student-directory')">Student Directory</div>
+            <div class="nav-item" onclick="showSection(this, 'delete-students')">Delete Student Records</div>
+            <div class="nav-item" onclick="logoutAdmin()"
+                style="margin-top: auto; border-top: 1px solid rgba(255,255,255,0.05); color: #ef4444;">LOGOUT</div>
+            <div class="nav-item" onclick="location.href='index.html'">View Portal</div>
+        </aside>
+
+        <main class="admin-main">
+            <!-- Overview Section -->
+            <section id="overview" class="admin-section active">
+                <h2 class="section-title">System Overview</h2>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <h4>Total Students</h4>
+                        <div class="value" id="stat-students">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <h4>Latest News</h4>
+                        <div class="value" id="stat-news">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <h4>Results Uploaded</h4>
+                        <div class="value" id="stat-results">0</div>
+                    </div>
+                </div>
+
+                <h3 style="margin-bottom: 1.5rem;">Recent Activity</h3>
+                <div id="activity-log" class="stat-card" style="padding: 1.5rem;">
+                    <p style="color: var(--text-dim);">System initialized. Administrator logged in.</p>
+                </div>
+            </section>
+
+            <!-- Register Students Section -->
+            <section id="reg-students" class="admin-section">
+                <h2 class="section-title">Student Registration</h2>
+                <div class="form-container">
+                    <div class="input-group">
+                        <label>Student Full Name</label>
+                        <input type="text" id="reg-name" placeholder="">
+                    </div>
+                    <div class="input-group">
+                        <label>Assign School ID</label>
+                        <input type="text" id="reg-id" placeholder="">
+                    </div>
+                    <div class="input-group">
+                        <label>Magic Token</label>
+                        <div style="display: flex; gap: 10px;">
+                            <input type="text" id="reg-token" placeholder="" style="flex: 1;">
+                            <button class="btn-primary"
+                                style="width: auto; background: var(--admin-card-solid); border: 1px solid var(--admin-border-solid); padding: 0 1.5rem;"
+                                onclick="generateToken()">GENERATE</button>
+                        </div>
+                    </div>
+                    <button class="btn-primary" style="background: var(--accent-admin);"
+                        onclick="registerStudent()">REGISTER STUDENT</button>
+                </div>
+            </section>
+
+            <!-- Student Directory Section -->
+            <section id="student-directory" class="admin-section">
+                <h2 class="section-title">Student Directory</h2>
+                <div class="form-container" style="max-width: 1000px;">
+                    <div style="margin-bottom: 2rem; display: flex; gap: 1rem;">
+                        <input type="text" id="directory-search" placeholder="" onkeyup="populateDirectoryList()"
+                            style="margin-bottom: 0;">
+                        <button class="btn-primary"
+                            style="width: auto; background: var(--admin-card-solid); padding: 0 1.5rem;"
+                            onclick="populateDirectoryList()">REFRESH</button>
+                    </div>
+                    <div style="overflow-x: auto;">
+                        <table style="width: 100%; border-collapse: collapse; text-align: left;">
+                            <thead
+                                style="background: var(--admin-bg-solid); color: var(--text-dim); text-transform: uppercase; font-size: 0.8rem;">
+                                <tr>
+                                    <th style="padding: 1rem; border-bottom: 1px solid var(--admin-border-solid);">
+                                        Student Name</th>
+                                    <th style="padding: 1rem; border-bottom: 1px solid var(--admin-border-solid);">
+                                        School ID</th>
+                                    <th style="padding: 1rem; border-bottom: 1px solid var(--admin-border-solid);">Magic
+                                        Token</th>
+                                    <th style="padding: 1rem; border-bottom: 1px solid var(--admin-border-solid);">
+                                        Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="directory-list">
+                                <!-- Populated by JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Delete Students Section -->
+            <section id="delete-students" class="admin-section">
+                <h2 class="section-title">Database Management</h2>
+                <div
+                    style="background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); padding: 1.25rem; border-radius: 12px; margin-bottom: 2rem; display: flex; align-items: start; gap: 15px;">
+                    <span style="font-size: 1.5rem;">⚠️</span>
+                    <div>
+                        <h4 style="color: #ef4444; margin-bottom: 0.25rem;">DELETION WARNING</h4>
+                        <p style="color: rgba(239, 68, 68, 0.8); font-size: 0.85rem; line-height: 1.4;">Removing a
+                            student will
+                            permanently erase their School ID, Magic Token, and all Academic Records. This action
+                            cannot
+                            be
+                            undone.</p>
+                    </div>
+                </div>
+
+                <div class="form-container">
+                    <div class="input-group">
+                        <label>Select Student to Remove</label>
+                        <select id="delete-student-select">
+                            <!-- Populated by JS -->
+                        </select>
+                    </div>
+
+                    <div class="input-group">
+                        <label>Confirm Admin Password</label>
+                        <input type="password" id="delete-confirm-pass" placeholder="">
+                    </div>
+
+                    <button class="btn-primary" style="background: #ef4444;" onclick="deleteStudent()">PERMANENTLY
+                        DELETE
+                        STUDENT</button>
+                </div>
+            </section>
+
+            <!-- Post News Section -->
+            <section id="post-news" class="admin-section">
+                <h2 class="section-title">Broadcast News</h2>
+                <div class="form-container">
+                    <div class="input-group">
+                        <label>Title</label>
+                        <input type="text" id="news-title" placeholder="">
+                    </div>
+                    <div class="input-group">
+                        <label>Category</label>
+                        <select id="news-category">
+                            <option value="Academic">Academic</option>
+                            <option value="Event">Event</option>
+                            <option value="Notice">Notice</option>
+                            <option value="Emergency">Emergency</option>
+                        </select>
+                    </div>
+                    <div class="input-group">
+                        <label>Content</label>
+                        <textarea id="news-content" placeholder=""></textarea>
+                    </div>
+                    <button class="btn-primary" style="background: var(--accent-admin);" onclick="submitNews()">PUBLISH
+                        NEWS</button>
+                </div>
+            </section>
+
+            <!-- Manage Posts Section -->
+            <section id="manage-posts" class="admin-section">
+                <h2 class="section-title">Manage Announcements</h2>
+                <div class="form-container" style="max-width: 1000px;">
+                    <p style="color: var(--text-dim); margin-bottom: 2rem;">Total active broadcasts: <span
+                            id="news-count-display" style="color: var(--accent-admin);">0</span></p>
+                    <div id="posts-list" style="display: flex; flex-direction: column; gap: 1rem;">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- Post Results Section -->
+            <section id="post-results" class="admin-section">
+                <h2 class="section-title">Record Results</h2>
+
+                <div
+                    style="background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.3); padding: 1.25rem; border-radius: 12px; margin-bottom: 2rem; display: flex; align-items: start; gap: 15px;">
+                    <span style="font-size: 1.5rem;">⚠️</span>
+                    <div>
+                        <h4 style="color: #f59e0b; margin-bottom: 0.25rem;">ADMIN VERIFICATION REMINDER</h4>
+                        <p style="color: rgba(245, 158, 11, 0.8); font-size: 0.85rem; line-height: 1.4;">Please
+                            cross-check the Student Name and ID matches the physical record. Verify that scores are
+                            correctly computed before broadcasting to the portal.</p>
+                    </div>
+                </div>
+
+                <div class="form-container">
+                    <div class="input-group">
+                        <label>Select Student to Award Results</label>
+                        <select id="result-student" onchange="autoFillVerification()">
+                            <!-- Populated by JS -->
+                        </select>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+                        <div class="input-group">
+                            <label>Verify Student Full Name</label>
+                            <input type="text" id="res-st-name" placeholder="">
+                        </div>
+                        <div class="input-group">
+                            <label>Verify School ID</label>
+                            <input type="text" id="res-st-id" placeholder="">
+                        </div>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+                        <div class="input-group">
+                            <label>Semester Selection</label>
+                            <select id="res-semester" onchange="toggleMetricLabel()">
+                                <option value="1">First Semester (GPA Record)</option>
+                                <option value="2">Second Semester (GPA & CGPA)</option>
+                            </select>
+                        </div>
+                        <div class="input-group">
+                            <label id="metric-label">GPA Score</label>
+                            <input type="number" id="res-value" step="0.01" placeholder="">
+                        </div>
+                    </div>
+
+                    <div id="cgpa-container" class="input-group" style="display: none;">
+                        <label>Sessional CGPA</label>
+                        <input type="number" id="res-cgpa" step="0.01" placeholder="">
+                    </div>
+
+                    <div class="input-group">
+                        <label>Number of Carry Over</label>
+                        <select id="res-carry-over">
+                            <option value="0">0 Carry Over</option>
+                            <option value="1">1 Carry Over</option>
+                            <option value="2">2 Carry Over</option>
+                            <option value="3">3 Carry Over</option>
+                            <option value="4">4 Carry Over</option>
+                            <option value="5">5 Carry Over</option>
+                            <option value="6">6 Carry Over</option>
+                            <option value="7">7 Carry Over</option>
+                            <option value="8">8 Carry Over</option>
+                            <option value="9">9+ Carry Over</option>
+                        </select>
+                    </div>
+
+                    <button class="btn-primary" style="background: var(--accent-admin);" onclick="submitResult()">VERIFY
+                        & UPLOAD RESULTS</button>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <footer
+        style="text-align: center; padding: 2rem; color: var(--text-dim); background: var(--admin-bg-solid); font-size: 0.85rem; border-top: 1px solid var(--admin-border-solid);">
+        <p>&copy; 2026 Computing College Portal System. All rights reserved.</p>
+        <p style="margin-top: 0.5rem; opacity: 0.6;"><a href="https://www.raehub.live" target="_blank"
+                style="color: inherit; text-decoration: none;">Powered by Rae hub tech Company</a></p>
+    </footer>
+
+    <script src="data.js"></script>
+    <script type="module" src="firebase-config.js"></script>
+    <script src="admin.js"></script>
+</body>
+
+</html>
