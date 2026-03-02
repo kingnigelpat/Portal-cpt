@@ -14,8 +14,9 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
 // Global data variables (initialized with defaults while cloud loads)
-window.newsData = [];
-window.studentsDB = [];
+// Global data variables (initialized with defaults from data.js or empty if new)
+window.newsData = window.newsData || [];
+window.studentsDB = window.studentsDB || [];
 
 const systemDocRef = doc(db, "portal", "database");
 
@@ -27,8 +28,10 @@ window.saveData = async function () {
             students: window.studentsDB
         });
         console.log("Cloud Sync Successful");
+        if (typeof showToast === 'function') showToast("Cloud Sync Successful!");
     } catch (error) {
         console.error("Cloud Sync Failed:", error);
+        if (typeof showToast === 'function') showToast("Cloud Sync Failed! Check connection.", "error");
     }
 };
 

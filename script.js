@@ -42,7 +42,7 @@ function renderNews() {
         newsGrid.appendChild(div);
     });
 }
-
+// https://portal-cpt.vercel.app/
 function showToast(message, type = 'success') {
     const container = document.getElementById('toast-container');
     if (!container) return;

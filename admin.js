@@ -94,7 +94,7 @@ function deleteNews(index) {
     const title = window.newsData[index].title;
     if (confirm(`Are you sure you want to delete this post: "${title}"?`)) {
         window.newsData.splice(index, 1);
-        saveData();
+        window.saveData();
         logActivity(`Deleted News: ${title}`);
         loadStats();
         populatePostsList();
@@ -126,7 +126,7 @@ function deleteStudent() {
         const studentName = window.studentsDB[index].name;
         if (confirm(`FINAL WARNING: Are you absolutely sure you want to delete ${studentName}? This cannot be undone.`)) {
             window.studentsDB.splice(index, 1);
-            saveData();
+            window.saveData();
             logActivity(`DELETED STUDENT: ${studentName} (${studentId})`);
             loadStats();
             populateStudentSelect();
@@ -144,7 +144,7 @@ function verifyAdmin() {
     const loginGate = document.getElementById('admin-login-gate');
     const adminLayout = document.getElementById('main-admin-layout');
 
-    if (password === 'PRSHED') {
+    if (password.toUpperCase() === 'PRSHED') {
         sessionStorage.setItem('adminLoggedIn', 'true');
         loginGate.style.display = 'none';
         adminLayout.style.visibility = 'visible';
@@ -178,7 +178,7 @@ function autoFillVerification() {
         return;
     }
 
-    const student = studentsDB.find(s => s.schoolId === studentId);
+    const student = window.studentsDB.find(s => s.schoolId === studentId);
     if (student) {
         nameInput.value = student.name;
         idInput.value = student.schoolId;
@@ -245,7 +245,7 @@ function submitNews() {
     };
 
     window.newsData.unshift(newEntry);
-    saveData();
+    window.saveData();
     logActivity(`Published News: ${title}`);
     loadStats();
     populatePostsList();
@@ -299,7 +299,7 @@ function submitResult() {
     };
 
     if (sem === "2") {
-        if (!cgpa) return alert("Please enter sessional CGPA for second semester.");
+        if (!cgpa) return showToast("Please enter sessional CGPA for second semester.", "error");
         resultData.cgpa = cgpa;
     }
 
@@ -307,11 +307,11 @@ function submitResult() {
     if (!student.academic_records) student.academic_records = [];
     student.academic_records.unshift(resultData);
 
-    saveData();
+    window.saveData();
     logActivity(`Uploaded Result: Sem ${sem} for ${student.name} (${carryOver} Carry Over)`);
     loadStats();
 
-    alert(`Success: Results for ${student.name} have been broadcasted.`);
+    showToast(`Success: Results for ${student.name} have been broadcasted.`);
 
     // Reset fields
     document.getElementById('res-st-name').value = '';
@@ -346,11 +346,12 @@ function registerStudent() {
         schoolId: id,
         magicToken: token,
         name: name,
-        results: []
+        results: [],
+        academic_records: []
     };
 
     window.studentsDB.push(newStudent);
-    saveData();
+    window.saveData();
     logActivity(`Registered Student: ${name} (${id})`);
     loadStats();
     populateStudentSelect();
