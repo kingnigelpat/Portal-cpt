@@ -2,15 +2,12 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
 import { getFirestore, doc, getDoc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-const firebaseConfig = {
-    apiKey: "AIzaSyAqVeXjplLd9oT1KKGiq_J7L8IrWhx8Y68",
-    authDomain: "portal-cpt.firebaseapp.com",
-    projectId: "portal-cpt",
-    storageBucket: "portal-cpt.firebasestorage.app",
-    messagingSenderId: "996686724362",
-    appId: "1:996686724362:web:93def0c83fe9b225120ef3",
-    measurementId: "G-Y14QPSM5ZX"
-};
+// Import sensitive config from gitignored file
+import { firebaseConfig } from "./env.js";
+
+if (!firebaseConfig || !firebaseConfig.apiKey) {
+    console.error("Firebase Configuration Missing! Please create env.js based on env.example.js");
+}
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
@@ -20,8 +17,6 @@ const db = getFirestore(app);
 window.newsData = [];
 window.studentsDB = [];
 
-// Reference to a single document that holds all our portal data for simplicity (or we can use collections)
-// For 100 students, a single "system" doc is fast and easy.
 const systemDocRef = doc(db, "portal", "database");
 
 // Function to save data to Cloud Firestore
@@ -44,7 +39,6 @@ onSnapshot(systemDocRef, (docSnap) => {
         window.newsData = data.news || [];
         window.studentsDB = data.students || [];
 
-        // Trigger UI refreshes depending on which page we are on
         if (typeof renderNews === 'function') renderNews();
         if (typeof loadStats === 'function') loadStats();
         if (typeof populateStudentSelect === 'function') populateStudentSelect();
@@ -54,9 +48,7 @@ onSnapshot(systemDocRef, (docSnap) => {
 
         console.log("Database Synced from Cloud");
     } else {
-        // First time initialization if cloud is empty
         console.log("Initializing Cloud Storage with defaults...");
-        // Use default data from previous data.js logic if needed
         window.saveData();
     }
 });

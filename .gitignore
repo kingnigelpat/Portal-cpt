@@ -1,0 +1,11 @@
+# Sensitive Info
+env.js
+secrets.js
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Project
+node_modules/
+.env
