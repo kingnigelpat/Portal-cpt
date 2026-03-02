@@ -1,5 +1,5 @@
 # Sensitive Info
-env.js
+# env.js included for deployment (ensure Firebase rules are set)
 secrets.js
 
 # OS files
