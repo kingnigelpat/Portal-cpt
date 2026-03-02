@@ -119,7 +119,11 @@ function deleteStudent() {
     const confirmPass = document.getElementById('delete-confirm-pass').value;
 
     if (!studentId) return showToast("Select a student to delete.", 'error');
-    if (confirmPass !== "PRSHED") return showToast("Security Confirmation Failed: Incorrect Admin Password.", 'error');
+    if (confirmPass.toUpperCase() !== "PRSHED") return showToast("Security Confirmation Failed: Incorrect Admin Password.", 'error');
+
+    if (typeof window.saveData !== 'function') {
+        showToast("Warning: Firebase functions not ready. Some features may fail if opened as local file.", "error");
+    }
 
     const index = window.studentsDB.findIndex(s => s.schoolId === studentId);
     if (index !== -1) {
@@ -135,6 +139,23 @@ function deleteStudent() {
             showToast("Student Record Permanently Removed.");
             document.getElementById('delete-confirm-pass').value = '';
         }
+    }
+}
+
+function wipeAllStudents() {
+    const confirmPass = document.getElementById('delete-confirm-pass').value;
+    if (confirmPass.toUpperCase() !== "PRSHED") return showToast("Security Confirmation Failed: Incorrect Admin Password.", 'error');
+
+    if (confirm("CRITICAL WARNING: This will delete EVERY student in the database. Are you absolutely sure?")) {
+        window.studentsDB = [];
+        window.saveData();
+        logActivity("DATABASE WIPE: All student records removed.");
+        loadStats();
+        populateStudentSelect();
+        populateDeleteSelect();
+        populateDirectoryList();
+        showToast("Database Cleared Successfully.");
+        document.getElementById('delete-confirm-pass').value = '';
     }
 }
 
@@ -235,7 +256,11 @@ function submitNews() {
     const category = document.getElementById('news-category').value;
     const content = document.getElementById('news-content').value;
 
-    if (!title || !content) return alert("Please fill all fields");
+    if (!title || !content) return showToast("Please fill all fields", "error");
+
+    if (typeof window.saveData !== 'function') {
+        return showToast("Critical: Firebase not loaded. Please use a local server (Live Server) instead of opening file directly.", "error");
+    }
 
     const newEntry = {
         category,
@@ -281,6 +306,10 @@ function submitResult() {
     const carryOver = document.getElementById('res-carry-over').value;
 
     if (!name || !id || !val) return showToast("Please fill all required verification fields.", 'error');
+
+    if (typeof window.saveData !== 'function') {
+        return showToast("Critical: Firebase not loaded. Please use a local server.", "error");
+    }
 
     // Find student in DB
     const student = window.studentsDB.find(s => s.schoolId === id);
